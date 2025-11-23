@@ -1,0 +1,22 @@
+define dSensor HASH("StructureOccupancySensor")
+define dLight HASH("StructureWallLight")
+define dLightLong HASH("StructureLightLong")
+define dLightLongWide HASH("StructureLightLongWide")
+
+alias nameHash r14
+
+push HASH("Main Corridor")
+
+main:
+yield
+get nameHash db sp
+brnez nameHash 3
+move sp 0
+j main
+lbn r0 dSensor nameHash Activate Maximum
+sbn dLight nameHash On r0
+sbn dLightLong nameHash On r0
+sbn dLightLongWide nameHash On r0
+
+add sp sp 1
+j main

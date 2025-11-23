@@ -1,0 +1,92 @@
+define dGrowlight -1758710260
+define dShutter -2078371660
+
+alias nextWakeup r9 
+alias darkenUntil r10
+alias darkenNext r11
+alias lightLen r12 # unused does not matter
+alias darkLen r13
+alias farmHash r14
+alias timer r15
+
+move timer 1
+move nextWakeup 0
+
+clr db
+
+# add managed farms
+move farmHash HASH("Greenhouse 1")
+move darkLen 300
+jal fPushFarm
+
+main:
+yield
+add timer timer 1 # tick timer
+
+jal fNextFarm # go to next farm
+slt r0 darkenUntil timer # determine if lights need to be off
+sbn dGrowlight farmHash On r0
+sbn dShutter farmHash Open r0
+bgt darkenUntil timer main # no action required until timers run out
+bgt darkenNext timer main
+add darkenUntil timer darkLen # set new timers
+add darkenUntil darkenUntil 60 # 30s extra darkness
+add darkenNext timer 2400 # 20 * 60 * 2 rest of 20 minute cycle is with light
+jal fUpdateFarm # save timers in stack
+
+j main
+
+# farmHash|r14 labeler names on lamp and shutter
+# darkLen|r13 dark required in seconds
+fPushFarm:
+poke sp farmHash
+add r0 sp 1
+mul r1 darkLen 2
+poke r0 r1
+add r0 sp 4
+add darkenNext timer 10
+poke r0 darkenNext
+add sp sp 5
+j ra
+
+fUpdateFarm:
+add r0 sp 3
+poke r0 darkenUntil
+brlt darkenUntil timer 3
+brgt darkenUntil nextWakeup 2
+move nextWakeup darkenUntil
+add r0 sp 4
+poke r0 darkenNext
+brlt darkenNext timer 3
+brgt darkenNext nextWakeup 2
+move nextWakeup darkenNext
+j ra
+
+fNextFarm:
+add sp sp 5
+get farmHash db sp
+brnez farmHash 11 # skipStackReset if next is empty reset stack pointer
+sub r0 nextWakeup timer # stack is handled and nextWakeup collected, sleep if needed
+brlez r0 6 # skipSleep
+div r0 r0 2
+floor r0 r0
+sleep r0
+mul r0 r0 2
+add timer timer r0
+add nextWakeup timer 2400 # skipSleep:
+move sp 0
+get farmHash db sp
+add r0 sp 1 # skipStackReset:
+get darkLen db r0
+add r0 sp 3
+get darkenUntil db r0
+brlt darkenUntil timer 3
+brgt darkenUntil nextWakeup 2
+move nextWakeup darkenUntil
+add r0 sp 4
+get darkenNext db r0
+brlt darkenNext timer 3
+brgt darkenNext nextWakeup 2
+move nextWakeup darkenNext
+j ra
+
