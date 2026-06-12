@@ -1,7 +1,7 @@
 ######################################################################
 #                            ATTENTION
 # All empty and comment lines must be stripped before usage!
-# Script is too long and will be trunkated otherwise.
+# Script is too long and will be truncated otherwise.
 # Relative branching assumes they were stripped!
 ######################################################################
 define Furnace 545937711 #Update: 6.22
