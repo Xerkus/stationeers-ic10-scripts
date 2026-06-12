@@ -1,3 +1,9 @@
+######################################################################
+#                            ATTENTION
+# All empty and comment lines must be stripped before usage!
+# Script is too long and will be trunkated otherwise.
+# Relative branching assumes they were stripped!
+######################################################################
 define Furnace 545937711 #Update: 6.22
 define Pump -321403609
 define IC 2037291645
@@ -15,21 +21,28 @@ move r1 0
 move r2 0
 move r3 0
 move r4 0
+
+# --- top up fuel line while pressure below 5MPA
 lbn r15 435685051 HASH("Fuel PA") Pressure 2 #Check the pressure in the fuel pipe
 slt r15 r15 5000 #Set the fuel pipe to 5MPA
 sbn 2104106366 HASH("Fuel Mixer") On r15
+
 lbn r14 Furnace HASH("A Furnace") On 1
 sbn 1944485013 HASH("SLight") On r14 #Turn Light Light ON
-sbn 1944485013 HASH("SLight") Color 4#Set Light Color to Red
+sbn 1944485013 HASH("SLight") Color 4 #Set Light Color to Red
 sbn led HASH("SLed") On r14
 sbn led HASH("SLed") Mode 10 #Set display to text
 sbn led HASH("SLed") Setting STR("Ready!")
+
+# --- when flush lever pulled or pressure over 40MPA turn on furnace out pump
 lbn r12 1220484876 HASH("Flush") Open 1 #Load Furnace Lever Setting
 lbn r5 Furnace HASH("A Furnace") Pressure 2
 sgt r5 r5 40000
 or r12 r12 r5
 mul r12 r12 100
 sbn Furnace HASH("A Furnace") SettingOutput r12
+
+# --- reset state to idle positions, reset activation
 sbn Furnace HASH("A Furnace") SettingInput 0
 s db Setting -1
 sbn Pump HASH("CoolantPump") Setting 0
@@ -37,34 +50,46 @@ sbn Pump HASH("FuelPump") Setting 0
 sbn Pump HASH("FuelPump") On 0
 sbn Pump HASH("CoolantPump") On 0
 sbn Furnace HASH("A Furnace") Open 0
+
+# --- wait for activation via housing Setting
 yield
 l r0 db Setting
 blez r0 start
+
 jal Get
 set:############################
 sbn 2104106366 HASH("Fuel Mixer") On 0
 sbn 1944485013 HASH("SLight") Color 2 #Set Light Color to Green
 sbn led HASH("SLed") Setting STR("Active")
+
 lbn temp Furnace HASH("A Furnace") Temperature 2
-brgt temp 600 2
+brgt temp 600 2 # skip
 sbn Furnace HASH("A Furnace") Activate 1
-sbn Furnace HASH("A Furnace") SettingInput 100
+sbn Furnace HASH("A Furnace") SettingInput 100 # skip:
+
+# fuel
+# r0 = Tmax/Tcur * Vfuel * Pmin * 500/(Tfuel * Nfuel * 8314.46)
 lbn r0 Analyzer HASH("Fuel PA") Volume 1
 select temp temp temp 300
 div r12 maxtemp temp
 mul r0 r0 minpress
 mul r0 r0 r12
-mul r0 r0 500
+mul r0 r0 500 # ???
 lbn r15 Analyzer HASH("Fuel PA") Temperature 1
 lbn r14 Analyzer HASH("Fuel PA") TotalMoles 1
 mul r15 r15 r14
 mul r15 r15 8314.46
 div r0 r0 r15
 sbn Pump HASH("FuelPump") Setting r0
+
+# coolant
+# r0 = min(Tcur/Tmax, 1) * Tcool * 250000 * Vcool / (Tcool * 8314)
 lbn r15 Analyzer HASH("Coolant PA") Temperature 1
 lbn r0 Analyzer HASH("Coolant PA") Volume 1
+# can be dropped with modification above
 lbn temp Furnace HASH("A Furnace") Temperature 2
 div r12 temp maxtemp
+# replace max r12 r12 1
 brgt r12 1 2
 move r12 1
 mul r13 r15 250000  #8095.8
@@ -75,8 +100,11 @@ mul r15 r15 r14
 mul r15 r15 8314.46
 div r0 r0 r15
 sbn Pump HASH("CoolantPump") Setting r0
+
 lbn press Furnace HASH("A Furnace") Pressure 2
+# can be dropped
 lbn temp Furnace HASH("A Furnace") Temperature 2
+# replace min press press 55000
 brlt press 55000 2
 move press 55000
 slt r10 temp mintemp
@@ -86,10 +114,16 @@ select r5 minpress r5 0
 sgt r6 press maxpress
 or r10 r10 r5
 mul r6 r6 30
+# min(Pfurn, 55000) > minpress || Tfurn < mintemp
 sbn Pump HASH("FuelPump") On r10
+# Tfurn > maxtemp
 sbn Pump HASH("CoolantPump") On r9
+# on min(Pfurn, 55000) > maxpress set 30
 sbn Furnace HASH("A Furnace") SettingOutput r6
+
+# unused
 lbn r10 Dial HASH("Ingot Dial") Setting 2
+# read what current reagents would produce?
 lbn r11 Furnace HASH("A Furnace") RecipeHash 2
 lbn r12 IC HASH("Hash IC") Setting 1
 lbn r13 Furnace HASH("A Furnace") Open 2
@@ -99,30 +133,33 @@ lbn r14 -815193061 HASH("Amount") Setting 2
 lbn r15 Dial HASH("Ingot Dial") Setting 2
 sgt r6 r15 7
 brgtz r14 2
-and r11 r11 r6
-brlt r15 13 2 #Branch if the selected is not a super alloy
+and r11 r11 r6 # not simple ingot and is currently requested
+brlt r15 13 2 #Branch if the selected is not a super alloy 
 div r12 r12 4
-seq r12 r12 r14 #Reagent = Set amount
+seq r12 r12 r14 #Reagent = Set amount 
 seqz r6 r14  #Amount not found, flag = 1
 or r12 r12 r6  #Amount is 0 or Amount match flag = 1
-mul r12 r12 r11 #Amount and Hash match request
+# could be replaced with and
+mul r12 r12 r11 #Amount and Hash match request 
 bgtz r12 end
-bgtz r13 end
+# this is potentially dangerous. if lever is opened manually while fuel is getting added
+bgtz r13 end # could be moved along with the lbn to before current block and skip a lot of ops
 j set #############################
 end:
-lbn r14 Furnace HASH("A Furnace") Reagents 2
+lbn r14 Furnace HASH("A Furnace") Reagents 2 # unload:
 sbn Furnace HASH("A Furnace") Open 1
 yield
-brgtz r14 -3
+brgtz r14 -3 # unload ^
 sbn Dial HASH("Ingot Dial") Setting 0
 sbn Furnace HASH("A Furnace") SettingOutput 0
 j start############################
 Get:
 move r5 0
 l r0 db Setting
-add r5 r5 1
+add r5 r5 1 # next:
 mul r0 r0 100000
 trunc rr5 r0
 mod r0 r0 rr5
-brle r5 3 -4
+brle r5 3 -4 # next ^
 j ra
+
