@@ -1,0 +1,118 @@
+######################################################################
+#                            ATTENTION
+# All empty and comment lines must be stripped before usage!
+# Script is too long and will be trunkated otherwise.
+# Relative branching assumes they were stripped!
+######################################################################
+define Furnace 545937711
+define Pump -321403609
+define Analyzer 435685051
+alias mode r15
+alias minTemp r14
+alias maxTemp r13
+alias minPress r12
+alias maxPress r11
+alias temp r10
+alias press r9
+
+# reset stack after chip (re-)inserted
+clr db
+sbn Analyzer HASH("FA Oxidizer PA") On 1
+sbn Analyzer HASH("FA Fuel PA") On 1
+sbn Analyzer HASH("FA FuelMix PA") On 1
+sbn Analyzer HASH("FA Coolant PA") On 1
+sbn Analyzer HASH("FA Hot PA") On 1
+
+read:
+yield
+move sp 6
+pop maxPress
+min maxPress maxPress 50000
+pop minPress
+max minPress minPress 0
+pop maxTemp
+pop minTemp
+pop mode
+
+# operate mixer
+sbn 2104106366 HASH("FA Fuel Mixer") On 0
+# Check pressure in the fuel pipe
+lbn r0 Analyzer HASH("FA FuelMix PA") Pressure 2
+brgt r0 6000 9
+# operate mixer
+lbn r12 Analyzer HASH("FA Oxidizer PA") Temperature 2
+lbn r13 Analyzer HASH("FA Fuel PA") Temperature 2
+mul r14 r13 2
+div r14 r12 r14
+add r14 r14 1
+div r14 100 r14
+sbn 2104106366 HASH("FA Fuel Mixer") Setting r14
+sbn 2104106366 HASH("FA Fuel Mixer") On 1
+
+sbn Pump HASH("FA FuelMix Pump") On 0
+sbn Pump HASH("FA Hot Pump") On 0
+sbn Pump HASH("FA Coolant Pump") On 0
+
+beq mode 1 active
+beq mode 2 purge
+
+# idle overpressure safety. TODO: after active optimization might need to be invoked
+lbn r0 Furnace HASH("FA Furnace") Pressure 2
+sgt r0 r0 50000
+mul r0 r0 100
+sbn Furnace HASH("FA Furnace") SettingOutput r0
+j read
+
+active:
+sbn Furnace HASH("FA Furnace") On 1
+lbn temp Furnace HASH("FA Furnace") Temperature 2
+lbn press Furnace HASH("FA Furnace") Pressure 2
+brgt temp 600 2
+sbn Furnace HASH("FA Furnace") Activate 1
+sbn Furnace HASH("FA Furnace") SettingInput 100
+sbn Furnace HASH("FA Furnace") SettingOutput 0
+
+# fuel
+brlt temp minTemp 3
+brlt press minPress 2
+jr 14
+# r0 = Tmax/Tcur * Vfuel * Pmin * 500/(Tfuel * Nfuel * 8314.46)
+select r0 temp temp 300
+div r0 maxTemp r0
+lbn r1 Analyzer HASH("FA FuelMix PA") Volume 1
+mul r1 r1 minPress
+mul r0 r0 r1
+mul r0 r0 500 # ???
+lbn r2 Analyzer HASH("FA FuelMix PA") Temperature 1
+lbn r3 Analyzer HASH("FA FuelMix PA") TotalMoles 1
+mul r2 r2 r3
+mul r2 r2 8314.46
+div r0 r0 r2
+sbn Pump HASH("FA FuelMix Pump") Setting r0
+sbn Pump HASH("FA FuelMix Pump") On 1
+
+# coolant
+brlt temp maxTemp 14
+# r0 = min(Tcur/Tmax, 1) * Tcool * 250000 * Vcool / (Tcool * 8314)
+lbn r2 Analyzer HASH("FA Coolant PA") Temperature 1
+lbn r0 Analyzer HASH("FA Coolant PA") Volume 1
+div r1 temp maxTemp
+max r1 r1 1
+mul r4 r2 250000  #8095.8
+mul r1 r1 r4
+mul r0 r0 r1
+lbn r3 Analyzer HASH("FA Coolant PA") TotalMoles 1
+mul r2 r2 r3
+mul r2 r2 8314.46
+div r0 r0 r2
+sbn Pump HASH("FA Coolant Pump") Setting r0
+sbn Pump HASH("FA Coolant Pump") On 1
+
+# Pfurn > maxpress = 30
+brlt press maxPress 2
+sbn Furnace HASH("FA Furnace") SettingOutput 30
+j read
+
+purge:
+sbn Furnace HASH("FA Furnace") SettingOutput 30
+j read
