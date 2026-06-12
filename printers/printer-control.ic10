@@ -1,0 +1,112 @@
+alias current r15
+alias printer r14
+alias stacker r12
+alias nameHash r11
+alias printersDb db
+clr db
+move current 1
+
+lbn r0 HASH("StructureAutolathe") HASH("Autolathe 1") ReferenceId 2
+jal addOne
+lbn r0 HASH("StructureElectronicsPrinter") HASH("Electronics 1") ReferenceId 2
+jal addOne
+#lbn r0 HASH("StructureHydraulicPipeBender") HASH("Bender 1") ReferenceId 2
+#jal addOne
+#lbn r0 HASH("StructureToolManufactory") HASH("Tool 1") ReferenceId 2
+#jal addOne
+#lbn r0 HASH("StructureRocketManufactory") HASH("Rocket Fab 1") ReferenceId 2
+#jal addOne
+#lbn r0 HASH("StructureSecurityPrinter") HASH("Security 1") ReferenceId 2
+#jal addOne
+
+put printersDb 0 current
+j next
+
+addOne:
+breqz r0 6
+l r2 r0 NameHash
+lbn r1 HASH("StructureStacker") r2 ReferenceId 2
+brnez r1 5
+lbn r1 HASH("StructureStackerReverse") r2 ReferenceId 2
+brnez r1 3
+s db On 0
+jr -1
+put printersDb current r0
+add current current 1
+put printersDb current r1
+add current current 3
+j ra
+
+next:
+add current current 4
+get r0 printersDb 0
+brlt current r0 3
+move current 1
+yield
+get printer printersDb current
+l nameHash printer NameHash
+add r0 current 1
+get stacker printersDb r0
+
+work:
+l r0 printer On
+s stacker On r0
+l r0 printer Open
+bnez r0 next
+l r0 printer Lock
+lbn r1 HASH("StructureLogicSwitch") nameHash Open 2
+sbn HASH("StructureLogicSwitch") nameHash Open 0
+brnez r0 6
+l r2 printer Activate
+bnez r2 countPrints
+l r2 printer ExportCount
+add r3 current 2
+put printersDb r3 r2
+beqz r1 next
+bnez r0 reset
+get r1 printer 0
+s printer Open 0
+beq r1 $0106 next
+# set recipe
+yield
+clrd printer
+put printer 0 $0106
+put printer 53 $0006
+# put printer 52 PrinterInstruction.EjectAllReagents
+move r1 1
+l r2 printer RecipeHash
+l r3 stacker Setting
+min r4 r3 $FF
+put printer r1 PrinterInstruction.WaitUntilNextValid
+add r1 r1 1
+move r5 PrinterInstruction.ExecuteRecipe
+ins r5 r4 8 8
+ins r5 r2 16 32
+put printer r1 r5
+add r1 r1 1
+ble r3 $FF next
+sub r3 r3 $FF
+jr -10
+
+reset:
+clrd printer
+s printer Lock 0
+s printer Activate 0
+s printer Open 0
+# flag to actively cancel deliveries
+add r0 current 3
+put printersDb r0 1
+j next
+
+countPrints:
+add r3 current 2
+get r0 printersDb r3
+l r1 printer ExportCount
+l r2 stacker Setting
+sub r0 r1 r0
+blt r0 r2 next
+s printer Activate 0
+s printer ClearMemory 1
+put printersDb r3 0
+j next
+
