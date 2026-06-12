@@ -2,6 +2,7 @@ define dSensor HASH("StructureOccupancySensor")
 define dLight HASH("StructureWallLight")
 define dLightLong HASH("StructureLightLong")
 define dLightLongWide HASH("StructureLightLongWide")
+define dLightRound HASH("StructureLightRound")
 
 alias nameHash r14
 
@@ -17,6 +18,7 @@ lbn r0 dSensor nameHash Activate Maximum
 sbn dLight nameHash On r0
 sbn dLightLong nameHash On r0
 sbn dLightLongWide nameHash On r0
+sbn dLightRound nameHash On r0
 
 add sp sp 1
 j main
