@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!--  This is a VERY simple web site / wep app to remove comments of IC10 Code for Stationeers!
+
+     Download the HTML file and open it in your browser. That's it!
+
+     Features:
+     - It removes everything after the first '#' in each line and also removes empty lines.
+     - It also counts the number of characters and lines in the input and output.
+
+     Note: There is no style sheet or other external resources used on this page.
+           Good old JavaScript and HTML only! Everything in ONE FILE! This is for PURPOSE!
+
+           Have fun with it!
+
+     Copyright (c) 2025 by Paul Schulze
+
+     This is free software, licensed under the MIT License.
+-->
+
+<style>
+
+    body {
+        background-color: #2B2D30;
+    }
+
+
+    h1 {
+        text-align: center;
+        color: lightskyblue;
+        font-family: Arial, sans-serif;
+        font-size: x-large;
+    }
+
+    h2 {
+        text-align: center;
+        color: lightgray;
+        font-family: Arial, sans-serif;
+        font-size: large;
+    }
+
+    table {
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+
+    textarea {
+        width: 45vw;
+        background-color: #1E1F22;
+        color: lightgray;
+    }
+
+    #input_chars, #input_lines {
+        color: red;
+        font-weight: bold;
+        font-size: large;
+    }
+
+    #output_chars, #output_lines {
+        color: green;
+        font-weight: bold;
+        font-size: large;
+    }
+
+    .page_2_columns {
+        display: inline-block;
+        width: 48%;
+        height: 10px;
+        vertical-align: top;
+    }
+
+    .calculated_values {
+        font-family: Arial, sans-serif;
+        font-size: medium;
+        margin: 5px 0;
+        text-align: center;
+    }
+
+    .center_parent {
+        padding-top: 1rem;
+        justify-content: center; /* horizontal */
+        align-items: center; /* vertical */
+        text-align: center;
+    }
+
+
+    .button_button {
+        background-color: #4CAF50; /* Green */
+        border: none;
+        color: white;
+        margin: 0 auto;
+        padding: 10px 20px;
+        text-align: center;
+        text-decoration: none;
+        font-size: 16px;
+        cursor: pointer;
+    }
+
+</style>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Stationeers IC10 Compressor Tool</title>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+</head>
+<body>
+
+<h1>Stationeers IC10 Compressor Tool</h1>
+
+<div class="center_parent">
+
+
+    <div class="page_2_columns">
+        <h2>
+            Original
+        </h2>
+
+        <p class="calculated_values">
+            <span id="input_chars"> 0 </span> Chars
+        </p>
+        <p class="calculated_values">
+            <span id="input_lines"> 0 </span> Lines
+        </p>
+
+        <label for="input_textarea"></label><textarea cols="40"
+                                                      id="input_textarea"
+                                                      rows="30"
+                                                      spellcheck="false">
+    </textarea>
+
+        <div class="center_parent">
+            <button class="button_button" id="clear_button">Clear All</button>
+        </div>
+
+    </div>
+    <div class="page_2_columns">
+        <h2>
+            Without Comments
+        </h2>
+
+        <p class="calculated_values">
+            <span id="output_chars"> 0 </span> Chars
+        </p>
+        <p class="calculated_values">
+            <span id="output_lines"> 0 </span> Lines
+        </p>
+
+        <label for="output_textarea"></label>
+        <textarea cols="40" id="output_textarea"
+                  rows="30"
+                  spellcheck="false">
+    </textarea>
+
+        <div class="center_parent">
+            <button class="button_button" id="copy_button">Copy to Clipboard</button>
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+    document.addEventListener("DOMContentLoaded", () => {
+
+        const inputTextarea = document.getElementById("input_textarea");
+        const outputTextarea = document.getElementById("output_textarea");
+
+        // clean up on first loading of the page
+        inputTextarea.value = "";
+        outputTextarea.value = "";
+
+
+        inputTextarea.addEventListener("input", () => {
+            // Get the input value
+            const inputValue = inputTextarea.value;
+
+            // Process the input value
+            // Search for all lines that have a "#" in them and remove everything after the "#"
+            // and also remove the "#" itself
+            let outputValue = inputValue
+                .split('\n') // Split the input into lines
+                .map(line => {
+                    const hashIndex = line.indexOf('#'); // Find the index of the first '#'
+                    return hashIndex !== -1 ? line.substring(0, hashIndex).trim() : line.trim(); // Remove everything after '#' and trim whitespace
+                })
+                .join('\n'); // Join the lines back together
+
+
+            // search for all empty lines and remove them
+            outputValue = outputValue
+                .split('\n') // Split the output into lines
+                .filter(line => line.trim() !== '') // Filter out empty lines
+                .join('\n'); // Join the lines back together
+
+
+            outputTextarea.value = outputValue
+            // copy content of output textarea to clipboard
+
+            // update the character and line counts
+            document.getElementById("input_chars").textContent = inputValue.length.toString()
+            document.getElementById("input_lines").textContent = inputValue.split('\n').length.toString();
+            document.getElementById("output_chars").textContent = outputValue.length.toString();
+            document.getElementById("output_lines").textContent = outputValue.split('\n').length.toString();
+
+
+        });
+
+        // add listener for clear button
+        const clearButton = document.getElementById("clear_button");
+        clearButton.addEventListener("click", () => {
+            // Clear both textareas
+            inputTextarea.value = "";
+            outputTextarea.value = "";
+            // Reset character and line counts
+            document.getElementById("input_chars").textContent = "0";
+            document.getElementById("input_lines").textContent = "0";
+            document.getElementById("output_chars").textContent = "0";
+            document.getElementById("output_lines").textContent = "0";
+        });
+
+        // add listener for copy button
+        const copyButton = document.getElementById("copy_button");
+        copyButton.addEventListener("click", () => {
+            // Copy the output textarea value to clipboard
+            const outputValue = outputTextarea.value;
+            navigator.clipboard.writeText(outputValue)
+                .then(() => {
+                    console.log("Copied to clipboard successfully!");
+                })
+                .catch(err => {
+                    console.error("Failed to copy: ", err);
+                });
+        });
+
+        console.log("Finished loading the page and setting up event listeners.");
+    });
+
+
+</script>
+
+</body>
+</html>
+
