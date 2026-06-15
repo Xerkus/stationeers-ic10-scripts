@@ -1,0 +1,97 @@
+define housing 2037291645
+alias control r15
+alias recipeSp r14
+lbn control housing HASH("FA Control IC") ReferenceId 2
+
+move r0 HASH("ItemAstroloyIngot")
+move r1 50
+move r2 1000
+ins r2 100000 24 24
+move r3 30000
+ins r3 40000 24 24
+move r4 50
+ins r4 HASH("Copper") 16 32
+move r5 100
+ins r5 HASH("Steel") 16 32
+move r6 50
+ins r6 HASH("Cobalt") 16 32
+jal addIngot
+
+move r0 HASH("ItemHastelloyIngot")
+move r1 50
+move r2 950
+ins r2 1000 24 24
+move r3 25000
+ins r3 30000 24 24
+move r4 100
+ins r4 HASH("Silver") 16 32
+move r5 50
+ins r5 HASH("Nickel") 16 32
+move r6 50
+ins r6 HASH("Cobalt") 16 32
+jal addIngot
+
+move r0 HASH("ItemInconelIngot")
+move r1 50
+move r2 600
+ins r2 100000 24 24
+move r3 23500
+ins r3 24000 24 24
+move r4 100
+ins r4 HASH("Gold") 16 32
+move r5 50
+ins r5 HASH("Steel") 16 32
+move r6 50
+ins r6 HASH("Nickel") 16 32
+jal addIngot
+
+move r0 HASH("ItemStelliteIngot")
+move r1 50
+move r2 1800
+ins r2 100000 24 24
+move r3 10000
+ins r3 20000 24 24
+move r4 50
+ins r4 HASH("Silver") 16 32
+move r5 100
+ins r5 HASH("Silicon") 16 32
+move r6 50
+ins r6 HASH("Cobalt") 16 32
+jal addIngot
+
+move r0 HASH("ItemWaspaloyIngot")
+move r1 50
+move r2 400
+ins r2 800 24 24
+move r3 50000
+ins r3 100000 24 24
+move r4 50
+ins r4 HASH("Silver") 16 32
+move r5 50
+ins r5 HASH("Nickel") 16 32
+move r6 100
+ins r6 HASH("Lead") 16 32
+jal addIngot
+
+jal addIngot
+div r13 recipeSp 10
+sbn HASH("StructureLogicDial") HASH("FA Ingot Select") Mode r13
+sbn HASH("StructureLogicDial") HASH("FA Ingot Amount") Mode 20 
+j end
+addIngot:
+move recipeSp 0
+get r13 control recipeSp
+breqz r13 4
+breq r13 r0 3
+add recipeSp recipeSp 10
+jr -4
+move r12 0
+add r11 recipeSp r12
+put control r11 rr12
+move rr12 0
+brgt r12 9 3
+add r12 r12 1
+jr -5
+j ra
+end:
+s db On 0

@@ -1,0 +1,96 @@
+define housing 2037291645
+alias control r15
+alias recipeSp r14
+lbn control housing HASH("FA Control IC") ReferenceId 2
+
+move r0 HASH("ItemIronIngot")
+move r1 50
+move r2 800
+ins r2 100000 24 24
+move r3 100
+ins r3 100000 24 24
+move r4 50
+ins r4 HASH("Iron") 16 32
+jal addIngot
+
+move r0 HASH("ItemCopperIngot")
+move r1 50
+move r2 600
+ins r2 100000 24 24
+move r3 100
+ins r3 100000 24 24
+move r4 50
+ins r4 HASH("Copper") 16 32
+jal addIngot
+
+move r0 HASH("ItemSiliconIngot")
+move r1 50
+move r2 900
+ins r2 100000 24 24
+move r3 100
+ins r3 100000 24 24
+move r4 50
+ins r4 HASH("Silicon") 16 32
+jal addIngot
+
+move r0 HASH("ItemGoldIngot")
+move r1 50
+move r2 600
+ins r2 100000 24 24
+move r3 100
+ins r3 100000 24 24
+move r4 50
+ins r4 HASH("Gold") 16 32
+jal addIngot
+
+move r0 HASH("ItemSilverIngot")
+move r1 50
+move r2 600
+ins r2 100000 24 24
+move r3 100
+ins r3 100000 24 24
+move r4 50
+ins r4 HASH("Silver") 16 32
+jal addIngot
+
+move r0 HASH("ItemLeadIngot")
+move r1 50
+move r2 400
+ins r2 100000 24 24
+move r3 100
+ins r3 100000 24 24
+move r4 50
+ins r4 HASH("Lead") 16 32
+jal addIngot
+
+move r0 HASH("ItemNickelIngot")
+move r1 50
+move r2 800
+ins r2 100000 24 24
+move r3 100
+ins r3 100000 24 24
+move r4 50
+ins r4 HASH("Nickel") 16 32
+jal addIngot
+
+jal addIngot
+div r13 recipeSp 10
+sbn HASH("StructureLogicDial") HASH("FA Ingot Select") Mode r13
+j end
+addIngot:
+move recipeSp 0
+get r13 control recipeSp
+breqz r13 4
+breq r13 r0 3
+add recipeSp recipeSp 10
+jr -4
+move r12 0
+add r11 recipeSp r12
+put control r11 rr12
+move rr12 0
+brgt r12 9 3
+add r12 r12 1
+jr -5
+j ra
+end:
+s db On 0

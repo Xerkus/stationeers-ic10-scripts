@@ -1,0 +1,149 @@
+######################################################################
+#                            ATTENTION
+# All empty and comment lines must be stripped before usage!
+# Script is too long and will be truncated otherwise.
+# Relative branching assumes they were stripped!
+######################################################################
+define furnace 545937711
+define dial 554524804
+define led -815193061
+alias combustionIC r15
+alias currentTarget r14
+alias currentHash r13
+alias expectReagents r12
+alias jobCounter r11
+
+lbn combustionIC 2037291645 HASH("FA Combustion IC") ReferenceId 2
+sbn led HASH("FA Mode") Mode 10
+sbn dial HASH("FA Ingot Amount") Mode 20
+
+start:
+jal yieldControls
+# --> manual mode
+lbn r1 1220484876 HASH("FA Manual") Open 2
+breqz r1 10
+add sp r0 4
+pop r1
+put combustionIC 3 r1
+pop r1
+put combustionIC 2 r1
+put combustionIC 1 1
+sbn led HASH("FA Mode") Color 11 # Porple
+sbn led HASH("FA Mode") Setting STR("Manual")
+j start
+# <-- manual mode
+# combustion control state idle
+put combustionIC 1 0
+sbn -851746783 HASH("FA Current") Setting 0
+sbn led HASH("FA Mode") Color 0 # blue
+sbn led HASH("FA Mode") Setting STR("Stdby")
+lbn r0 furnace HASH("FA Furnace") Open 2
+bnez r0 start
+# load and start next batch if any
+get r0 db 499
+ble r0 500 start
+sbn led HASH("FA Mode") Color 5 # yellow
+sbn led HASH("FA Mode") Setting STR("Next")
+sub r0 r0 1
+get r1 db r0
+ext r2 r1 16 32
+brlt r2 2147483648 2
+sub r2 r2 4294967296
+move currentTarget -10
+add currentTarget currentTarget 10
+get currentHash db currentTarget
+brnez currentHash 4
+put db r0 0
+put db 499 r0
+j start
+brne currentHash r2 -6
+ext r3 r1 0 16
+brle r3 0 -5
+add sp currentTarget 4
+pop r2
+put combustionIC 3 r2
+pop r2
+put combustionIC 2 r2
+pop r2
+sub r3 r3 r2
+brle r3 0 4
+ins r1 r3 0 16
+put db r0 r1
+jr 3
+put db r0 0
+put db 499 r0
+lbn r0 furnace HASH("FA Furnace") Reagents 2
+breqz r0 4
+sbn furnace HASH("FA Furnace") Open 1
+jal yieldControls
+jr -4
+sbn furnace HASH("FA Furnace") Open 0
+sbn -851746783 HASH("FA Current") Setting currentHash
+# record reagent request to stack
+add jobCounter jobCounter 1
+move expectReagents 0
+move r0 4
+add r1 currentTarget r0
+add r2 447 r0
+get r3 db r1
+ext r4 r3 0 16
+add expectReagents expectReagents r4
+put db r2 r3
+add r0 r0 1
+brlt r0 10 -7
+# job counter for the supply script to distinguish separate batches
+put db 450 jobCounter
+put combustionIC 1 1
+sbn led HASH("FA Mode") Color 2 # green
+sbn led HASH("FA Mode") Setting STR("Active")
+jal yieldControls
+lbn r0 furnace HASH("FA Furnace") Open 2
+brnez r0 11
+lbn r0 furnace HASH("FA Furnace") RecipeHash 2
+brne r0 currentHash -4
+lbn r0 furnace HASH("FA Furnace") Reagents 2
+brlt r0 expectReagents -6
+put combustionIC 1 0
+sbn furnace HASH("FA Furnace") Open 1
+jal yieldControls
+lbn r0 furnace HASH("FA Furnace") Reagents 2
+brnez r0 -3
+sbn furnace HASH("FA Furnace") Open 0
+# reset reagent request
+move sp 450
+push 0
+brlt sp 456 -1
+j start
+
+yieldControls:
+yield
+lbn r0 dial HASH("FA Ingot Select") Setting 2
+# Each recipe in stack is 10 long starting at 0 giving space for up to 6 reagents
+mul r0 r0 10
+# r1 = ingot hash
+get r1 db r0
+sbn -851746783 HASH("FA Ingot Select") Setting r1
+beqz r1 start
+add r2 r0 1
+# r2 = batch size
+get r2 db r2
+lbn r3 dial HASH("FA Ingot Amount") Setting 2
+# r2 = request amount
+mul r2 r3 r2
+sbn led HASH("FA Ingot Amount") Setting r2
+# r3 = queue pointer
+get r3 db 499
+max r3 r3 500
+sub r4 r3 500
+sbn led HASH("FA Queue Size") Setting r4
+beqz r2 ra
+bge r3 510 ra
+lbn r4 491845673 HASH("FA Ingot Enqueue") Activate 2
+beqz r4 ra
+move r4 r2
+ins r4 r1 16 32
+put db r3 r4
+add r3 r3 1
+put db 499 r3
+j ra
+
