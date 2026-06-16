@@ -36,6 +36,8 @@ pop maxTemp
 ext minTemp maxTemp 0 24
 ext maxTemp maxTemp 24 24
 pop mode
+lbn r0 1220484876 HASH("FA Purge") Open 2
+select mode r0 2 mode
 
 # operate mixer
 sbn 2104106366 HASH("FA Fuel Mixer") On 0
@@ -118,5 +120,5 @@ sbn Furnace HASH("FA Furnace") SettingOutput 30
 j start
 
 purge:
-sbn Furnace HASH("FA Furnace") SettingOutput 30
+sbn Furnace HASH("FA Furnace") SettingOutput 50
 j start
