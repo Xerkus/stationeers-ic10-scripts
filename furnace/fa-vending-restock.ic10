@@ -1,0 +1,105 @@
+alias sorter r15
+alias vending r14
+alias lastExportCount r13
+sbn HASH("StructureStacker") HASH("FA Stacker") Setting 50
+sbn HASH("StructureStacker") HASH("FA Stacker") On 1
+sbn HASH("StructureStackerReverse") HASH("FA Stacker") Setting 50
+sbn HASH("StructureStackerReverse") HASH("FA Stacker") On 1
+lbn r0 HASH("StructureLogicSorter") HASH("FA Stack Guard") ReferenceId 2
+clrd r0
+put r0 1 3276805 # filter size 50
+s r0 On 1
+lbn sorter HASH("StructureLogicSorter") HASH("FA Restocker") ReferenceId 2
+s sorter Mode 1
+clrd sorter
+s sorter On 1
+lbn vending HASH("StructureVendingMachine") HASH("FA Vending") ReferenceId 2
+
+checkRequired:
+clr db
+move sp 0
+push 3
+push HASH("ItemSilverIngot")
+push 3
+push HASH("ItemIronIngot")
+push 3
+push HASH("ItemCopperIngot")
+push 3
+push HASH("ItemSiliconIngot")
+push 3
+push HASH("ItemGoldIngot")
+push 3
+push HASH("ItemLeadIngot")
+push 3
+push HASH("ItemNickelIngot")
+push 5
+push HASH("ItemSteelIngot")
+push 5
+push HASH("ItemIronOre")
+push 5
+push HASH("ItemCopperOre")
+push 5
+push HASH("ItemSiliconOre")
+push 5
+push HASH("ItemGoldOre")
+push 5
+push HASH("ItemLeadOre")
+push 5
+push HASH("ItemSilverOre")
+push 5
+push HASH("ItemCoalOre")
+push 5
+push HASH("ItemCobaltOre")
+push 5
+push HASH("ItemNickelOre")
+put db 500 sp
+
+count:
+l lastExportCount vending ExportCount
+s sorter On 0
+clrd sorter
+move r0 0
+slot:
+ls r1 vending r0 Occupied
+beqz r1 nextSlot
+ls r1 vending r0 OccupantHash
+get sp db 500
+nextHash:
+beqz sp nextSlot
+pop r2
+pop r3
+brne r2 r1 3
+sub r3 r3 1
+put db sp r3
+j nextHash
+nextSlot:
+add r0 r0 1
+brgt r0 101 2
+j slot
+get sp db 500
+move r1 0
+nextFilter:
+beqz sp wait
+bgt r1 31 wait
+pop r2
+pop r3
+ble r3 0 nextFilter
+move r4 SorterInstruction.LimitNextExecutionByCount
+ins r4 r3 8 32
+put sorter r1 r4
+add r1 r1 1
+move r4 SorterInstruction.FilterPrefabHashEquals
+ins r4 r2 8 32
+put sorter r1 r4
+add r1 r1 1
+j nextFilter
+
+# TODO handle input count changes when not everything fit into sorter
+# TODO tie into vending system I develop
+wait:
+s sorter On 1
+l r0 vending ExportCount
+bne r0 lastExportCount checkRequired
+yield
+j wait
+

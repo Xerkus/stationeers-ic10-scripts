@@ -1,0 +1,138 @@
+######################################################################
+#                            ATTENTION
+# All empty and comment lines must be stripped before usage!
+# Script is too long and will be truncated otherwise.
+# Relative branching assumes they were stripped!
+######################################################################
+define furnace 545937711
+define vending HASH("StructureVendingMachine")
+alias controlIC r15
+alias lastExportCount r14
+alias currentRequestId r13
+
+lbn controlIC 2037291645 HASH("FA Control IC") ReferenceId 2
+move currentRequestId -1
+
+reagentMap:
+clr db
+move sp 0
+move r0 HASH("Carbon")
+move r1 HASH("ItemCharcoal")
+move r2 0
+jal addOne
+move r0 HASH("Steel")
+move r1 0
+move r2 HASH("ItemSteelIngot")
+jal addOne
+move r0 HASH("Cobalt")
+move r1 HASH("ItemCobaltOre")
+move r2 0
+jal addOne
+move r0 HASH("Silver")
+move r1 HASH("ItemSilverOre")
+move r2 HASH("ItemSilverIngot")
+jal addOne
+move r0 HASH("Nickel")
+move r1 HASH("ItemNickelOre")
+move r2 HASH("ItemNickelIngot")
+jal addOne
+move r0 HASH("Lead")
+move r1 HASH("ItemLeadOre")
+move r2 HASH("ItemLeadIngot")
+jal addOne
+move r0 HASH("Hydrocarbon")
+move r1 HASH("ItemCoalOre")
+move r2 HASH("ItemSolidFuel")
+jal addOne
+move r0 HASH("Gold")
+move r1 HASH("ItemGoldOre")
+move r2 HASH("ItemGoldIngot")
+jal addOne
+move r0 HASH("Silicon")
+move r1 HASH("ItemSiliconOre")
+move r2 HASH("ItemSiliconIngot")
+jal addOne
+move r0 HASH("Copper")
+move r1 HASH("ItemCopperOre")
+move r2 HASH("ItemCopperIngot")
+jal addOne
+move r0 HASH("Iron")
+move r1 HASH("ItemIronOre")
+move r2 HASH("ItemIronIngot")
+jal addOne
+put db 500 sp
+j watch
+
+addOne:
+add r3 sp 100
+put db r3 r1
+add r3 sp 200
+put db r3 r2
+push r0
+j ra
+
+watch:
+yield
+lbn r0 furnace HASH("FA Furnace") Open 2
+bnez r0 watch
+
+get r1 controlIC 450
+beqz r1 watch
+beq r1 currentRequestId watch # already handled, no new requests
+yield
+get currentRequestId controlIC 450
+move r11 0
+
+nextReagent:
+add r11 r11 1
+bgt r11 6 watch # we done
+add r1 450 r11
+get r3 controlIC r1
+beqz r3 watch # we done
+ext r2 r3 16 32
+brlt r2 2147483648 2
+sub r2 r2 4294967296
+ext r3 r3 0 16
+get sp db 500
+beqz sp watch
+pop r0
+brne r0 r2 -2
+move r12 sp
+reagent:
+# --> interrupt check
+lbn r0 furnace HASH("FA Furnace") Open 2
+# furnace opened, wait for request cancellation
+breqz r0 3
+sleep 1
+j reagent
+get r1 controlIC 450
+beqz r1 watch
+bne r1 currentRequestId watch # order changed, abort
+ble r3 0 nextReagent
+# ore
+add r4 r12 100
+get r10 db r4
+# skip to ingot when no ore (eg steel)
+breqz r10 2
+jal tryVend
+# ingot
+# do not use ingot with a single reagent recipes to avoid smelting ingot to get same ingot
+get r5 controlIC 452
+beqz r5 reagent
+add r4 r12 200
+get r10 db r4
+beqz r10 reagent
+jal tryVend
+j reagent
+
+tryVend:
+lbn lastExportCount vending HASH("FA Vending") ExportCount 2
+sbn vending HASH("FA Vending") RequestHash r10
+# takes about 3 ic ticks for export count to increase
+sleep 2
+lbn r0 vending HASH("FA Vending") ExportCount 2
+breq r0 lastExportCount 3
+sub r3 r3 50
+j reagent
+j ra
+
