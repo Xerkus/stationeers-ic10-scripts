@@ -18,39 +18,39 @@ lbn vending HASH("StructureVendingMachine") HASH("FA Vending") ReferenceId 2
 checkRequired:
 clr db
 move sp 0
-push 3
+push 1
 push HASH("ItemSilverIngot")
 push 3
 push HASH("ItemIronIngot")
-push 3
+push 1
 push HASH("ItemCopperIngot")
-push 3
+push 1
 push HASH("ItemSiliconIngot")
-push 3
+push 1
 push HASH("ItemGoldIngot")
-push 3
+push 1
 push HASH("ItemLeadIngot")
-push 3
+push 1
 push HASH("ItemNickelIngot")
 push 5
 push HASH("ItemSteelIngot")
-push 5
+push 12
 push HASH("ItemIronOre")
-push 5
+push 9
 push HASH("ItemCopperOre")
-push 5
+push 9
 push HASH("ItemSiliconOre")
-push 5
+push 9
 push HASH("ItemGoldOre")
-push 5
+push 9
 push HASH("ItemLeadOre")
-push 5
+push 9
 push HASH("ItemSilverOre")
-push 5
+push 9
 push HASH("ItemCoalOre")
-push 5
+push 9
 push HASH("ItemCobaltOre")
-push 5
+push 9
 push HASH("ItemNickelOre")
 put db 500 sp
 
