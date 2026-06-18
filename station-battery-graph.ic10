@@ -1,0 +1,44 @@
+define resolution 240 # 2 minutes
+define battery HASH("StructureBatteryLarge")
+define batteryName HASH("Station Battery (Large)")
+define led -815193061
+alias counter r15
+
+sbn led HASH("Station Battery %") Mode 1
+sbn led HASH("Station Battery Rate") Mode 2
+sbn led HASH("Station Battery Usage") Mode 2
+
+start:
+yield
+brgt sp 0 2
+move sp 59 # 29 seconds
+pop r1
+s db Setting r1
+lbn r1 battery batteryName Ratio Average
+sbn led HASH("Station Battery %") Setting r1
+lbn r2 battery batteryName PowerActual Average
+sbn led HASH("Station Battery Usage") Setting r2
+lbn r3 battery batteryName PowerPotential 2
+sub r3 r3 r2
+sbn led HASH("Station Battery Rate") Setting r3
+
+sub counter counter 1
+bgt counter 0 start
+move counter resolution
+mul r1 r1 100
+get r0 db 500
+jal nextPointer
+put db r0 r1
+put db 500 r0
+jal nextPointer
+put db r0 100
+jal nextPointer
+put db r0 0
+j start
+
+nextPointer:
+sub r0 r0 1
+bge r0 0 ra
+move r0 58 # one less than sp
+j ra
+
