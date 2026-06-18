@@ -130,7 +130,7 @@ Button (or possibly lever if script is not responsive enough for a button) `FA I
 ~~Optional memory chip `FA Target` and a hash display console set to read from it. Value is the currently processed
 recipe hash. Not the furnace recipe hash.~~ Not enough lines.
 Optional led console `FA Queue Size` shows a number of jobs currently in the queue.
-Optional memory chip `FA Current` stores hash of the currently loaded order.
+`FA Control IC` housing `Setting` stores hash of the currently loaded order and can be used to connect a hash display.
 TBD: Optional led console `FA Furnace Mode` displays statuses `Purge`, `Idle`, `Adjust`, `Holdng`.
 
 Default automatic mode uses queue and requests materials while ejecting results.
@@ -149,5 +149,4 @@ shall use pointer and packed entries count + hash. Count shall be corrected upwa
 breakpoint capping at 500. Match printer instruction?
 
 TODO: handle furnace getting turned off. Currently furnace must stay on. For overpressure purge furnace must be force turned on.
-
 
