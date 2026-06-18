@@ -64,8 +64,11 @@ move r5 50
 ins r5 HASH("Lead") 16 32
 jal addIngot
 
-jal addIngot
-div r13 recipeSp 10
+move r13 recipeSp
+add recipeSp recipeSp 10
+get r12 control recipeSp
+brnez r12 -3
+div r13 r13 10
 sbn HASH("StructureLogicDial") HASH("FA Ingot Select") Mode r13
 j end
 addIngot:
