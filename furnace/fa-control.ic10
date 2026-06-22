@@ -61,8 +61,10 @@ ext r3 r1 0 16
 brle r3 0 -5
 add sp currentTarget 4
 pop r2
+# pressure params
 put combustionIC 3 r2
 pop r2
+# temperature params
 put combustionIC 2 r2
 pop r2
 sub r3 r3 r2
@@ -93,6 +95,7 @@ add r0 r0 1
 brlt r0 10 -7
 # job counter for the supply script to distinguish separate batches
 put db 450 jobCounter
+# set combustion to reach and maintain mode
 put combustionIC 1 1
 sbn led HASH("FA Mode") Color 2 # green
 sbn led HASH("FA Mode") Setting STR("Active")
@@ -146,4 +149,3 @@ put db r3 r4
 add r3 r3 1
 put db 499 r3
 j ra
-
