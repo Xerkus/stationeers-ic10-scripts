@@ -1,4 +1,4 @@
-define resolution 240 # 2 minutes
+define resolution 480 # 4 minutes, 1 tick roughly 0.5s
 define battery HASH("StructureBatteryLarge")
 define batteryName HASH("Station Battery (Large)")
 define led -815193061
