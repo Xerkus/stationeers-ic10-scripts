@@ -1,0 +1,103 @@
+define housing 2037291645
+define pump -321403609
+define analyzer 435685051
+define vent -1129453144
+define led -815193061
+
+define hotboxVentsOn 1
+# comment out to avoid resetting Control IC stack or run fa-recipes-*.ic10 scripts afterwards to re-init
+clr db
+
+check:
+s db Setting 0
+l r0 db PrefabHash
+bneal r0 housing problem
+l r0 db NameHash
+bneal r0 HASH("FA Control IC") problem
+combustion:
+lbn r0 housing HASH("FA Combustion IC") ReferenceId 2
+beqzal r0 problem
+s r0 On 0
+lbn r0 HASH("StructureAdvancedFurnace") HASH("FA Furnace") ReferenceId 2
+beqzal r0 problem
+lbn r0 analyzer HASH("FA FuelMix PA") ReferenceId 2
+beqzal r0 problem
+s r0 On 1
+lbn r0 analyzer HASH("FA Coolant PA") ReferenceId 2
+beqzal r0 problem
+s r0 On 1
+lbn r0 analyzer HASH("FA Hot PA") ReferenceId 2
+beqzal r0 problem
+s r0 On 1
+lbn r0 analyzer HASH("FA Fuel PA") ReferenceId 2
+beqzal r0 problem
+s r0 On 1
+lbn r0 analyzer HASH("FA Oxidizer PA") ReferenceId 2
+beqzal r0 problem
+s r0 On 1
+lbn r0 2104106366 HASH("FA Fuel Mixer") ReferenceId 2
+beqzal r0 problem
+s r0 On 0
+lbn r0 pump HASH("FA FuelMix Pump") ReferenceId 2
+beqzal r0 problem
+s r0 On 0
+lbn r0 pump HASH("FA Coolant Pump") ReferenceId 2
+beqzal r0 problem
+s r0 On 0
+lbn r0 pump HASH("FA Hot Pump") ReferenceId 2
+beqzal r0 problem
+s r0 On 0
+sbn vent HASH("FA Waste Safety Vent") Mode 0
+sbn vent HASH("FA Waste Safety Vent") PressureInternal 50000
+sbn vent HASH("FA Waste Safety Vent") PressureExternal 50000
+sbn vent HASH("FA Waste Safety Vent") On 1
+lbn r0 vent HASH("FA Hotbox Vent 1") ReferenceId 2
+beqzal r0 problem
+s r0 Mode 1
+s r0 PressureInternal 55000
+s r0 PressureExternal 180
+s r0 On hotboxVentsOn
+sbn vent HASH("FA Hotbox Vent 2") Mode 0
+sbn vent HASH("FA Hotbox Vent 2") PressureInternal 0
+sbn vent HASH("FA Hotbox Vent 2") PressureExternal 150
+sbn vent HASH("FA Hotbox Vent 2") On hotboxVentsOn
+lbn r0 HASH("StructureLogicSwitch") HASH("FA Purge") ReferenceId 2
+beqzal r0 problem
+control:
+lbn r0 HASH("StructureLogicDial") HASH("FA Ingot Select") ReferenceId 2
+beqzal r0 problem
+lbn r0 HASH("StructureLogicMemory") HASH("FA Ingot Select") ReferenceId 2
+beqzal r0 problem
+lbn r0 HASH("StructureLogicDial") HASH("FA Ingot Amount") ReferenceId 2
+beqzal r0 problem
+s r0 Mode 20
+lbn r0 led HASH("FA Ingot Amount") ReferenceId 2
+beqzal r0 problem
+lbn r0 HASH("StructureLogicButton") HASH("FA Ingot Enqueue") ReferenceId 2
+beqzal r0 problem
+lbn r0 led HASH("FA Mode") ReferenceId 2
+beqzal r0 problem
+s r0 Mode 10
+lbn r0 led HASH("FA Queue Size") ReferenceId 2
+beqzal r0 problem
+lbn r0 HASH("StructureLogicSwitch") HASH("FA Manual") ReferenceId 2
+beqzal r0 problem
+supply:
+lbn r0 housing HASH("FA Supply IC") ReferenceId 2
+beqzal r0 problem
+
+
+
+
+
+
+
+
+j end
+problem:
+s db Setting ra
+s db On 0
+yield
+j ra
+end:
+s db Setting 0
