@@ -1,0 +1,119 @@
+define supplyStacker HASH("StructureStackerReverse")
+define housing HASH("StructureCircuitHousingCompact")
+alias current r15
+alias controlIC r14
+alias printer r13
+alias sorter r12
+alias nameHash r11
+move current 0
+clr db
+lbn controlIC housing HASH("Printer Control IC") ReferenceId 2 
+
+next:
+add current current 1
+get r0 controlIC 0
+brlt current r0 3
+move current 1
+yield
+get printer controlIC current
+brnez printer 3
+yield  # no printers defined
+j next
+l nameHash printer NameHash
+lbn sorter HASH("StructureLogicSorter") nameHash ReferenceId 2
+beqz sorter next
+s sorter On 1
+jal maybeReset
+jal tryVend
+jal loadReagents
+j next
+
+tryVend:
+get r0 sorter 1 # limit execution OP
+breqz r0 2 # not set
+bne r0 SorterInstruction.LimitNextExecutionByCount next
+mul r1 current 10
+get r2 db r1
+beqz r2 ra
+get r0 printer 54
+beqz r0 flagReset
+add sp r1 10
+add r1 r1 1
+move r2 0 # is there anything left to vend?
+nextReagent:
+brgt sp r1 3
+beqz r2 flagReset
+j next
+pop r3
+beqz r3 nextReagent
+move r2 1
+ext r4 r3 0 8
+ext r5 r3 8 32
+brlt r5 2147483648 2
+sub r5 r5 4294967296
+lbn r6 supplyStacker r5 ReferenceId 2
+beqz r6 nextReagent
+l r7 r6 Output
+bne r7 -1 nextReagent
+ls r7 r6 2 Quantity
+blt r7 r4 nextReagent
+yield
+l r7 r6 Output
+bne r7 -1 nextReagent
+ls r7 r6 2 Quantity
+blt r7 r4 nextReagent
+s r6 Setting r4
+s r6 Output 1
+s r6 On 1
+clrd sorter
+move r6 SorterInstruction.FilterPrefabHashEquals
+ins r6 r5 8 32
+put sorter 0 r6
+move r6 SorterInstruction.LimitNextExecutionByCount
+ins r6 1 8 32
+put sorter 1 r6
+move r6 SorterInstruction.FilterQuantityCompare
+ins r6 Equals 8 8
+ins r6 r4 16 16
+put sorter 2 r6
+put db sp 0
+j next
+
+# load missing reagents into own stack
+loadReagents:
+get r0 printer 54
+beqz r0 next
+mul sp current 10
+push printer
+move r0 53
+add r0 r0 1
+bgt r0 62 next
+get r1 printer r0
+brnez r1 3
+push 0
+jr -5
+ext r2 r1 8 8
+ext r3 r1 16 32
+brlt r3 2147483648 2
+sub r3 r3 4294967296
+rmap r3 d0 r3
+ins r2 r3 8 32
+push r2
+jr -13
+
+maybeReset:
+add r0 current 150
+get r1 controlIC r0
+beqz r1 ra
+clrd sorter
+mul sp current 10
+add r1 sp 10
+push 0
+brlt sp r1 -1
+put controlIC r0 0
+j next
+
+flagReset:
+add r0 current 150
+put controlIC r0 1
+j next
