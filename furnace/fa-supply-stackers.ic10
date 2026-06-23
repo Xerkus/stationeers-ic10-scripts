@@ -1,0 +1,109 @@
+######################################################################
+#                            ATTENTION
+# All empty and comment lines must be stripped before usage!
+# Script is too long and will be truncated otherwise.
+# Relative branching assumes they were stripped!
+######################################################################
+define furnace 545937711
+define supplyStacker HASH("StructureStackerReverse")
+alias controlIC r15
+alias sorter r14
+alias currentRequestId r13
+
+lbn controlIC 2037291645 HASH("FA Control IC") ReferenceId 2
+lbn sorter HASH("StructureLogicSorter") HASH("FA Furnace Sorter") ReferenceId 2
+s sorter On 1
+move currentRequestId -1
+
+reset:
+clrd sorter
+watch:
+yield
+lbn r0 furnace HASH("FA Furnace") Open 2
+bnez r0 watch
+
+get r1 controlIC 450
+beqz r1 watch
+beq r1 currentRequestId watch # already handled, no new requests
+yield
+get currentRequestId controlIC 450
+move r11 0
+
+nextReagent:
+add r11 r11 1
+bgt r11 6 reset # we done
+add r1 450 r11
+get r3 controlIC r1
+beqz r3 reset # we done
+ext r2 r3 16 32
+brlt r2 2147483648 2
+sub r2 r2 4294967296
+ext r3 r3 0 16
+get sp db 500
+beqz sp reset
+pop r0
+brne r0 r2 -2
+move r12 sp
+reagent:
+# --> interrupt check
+lbn r0 furnace HASH("FA Furnace") Open 2
+# furnace opened, wait for request cancellation
+breqz r0 3
+sleep 1
+j reagent
+jal waitDelivery
+ble r3 0 nextReagent
+# ore
+add r4 r12 100
+get r10 db r4
+# skip to ingot when no ore (eg steel)
+breqz r10 2
+jal tryVend
+# ingot
+# do not use ingot with a single reagent recipes to avoid smelting ingot to get same ingot
+get r5 controlIC 452
+beqz r5 reagent
+add r4 r12 200
+get r10 db r4
+beqz r10 reagent
+jal tryVend
+j reagent
+
+tryVend:
+yield
+lbn r1 supplyStacker r10 ReferenceId 2
+beqz r1 ra
+l r2 r1 Output
+bne r2 -1 reagent
+ls r2 r1 2 Quantity
+ls r4 r1 2 MaxQuantity
+max r4 r4 50
+min r4 r3 r4
+blt r2 r4 ra
+s r1 Setting r4 # clamp to MaxQuantity
+s r1 Output 1
+s r1 On 1
+clrd sorter
+# change register
+move r0 SorterInstruction.FilterPrefabHashEquals
+ins r0 r10 8 32
+put sorter 0 r0
+move r0 SorterInstruction.LimitNextExecutionByCount
+ins r0 1 8 32
+put sorter 1 r0
+move r0 SorterInstruction.FilterQuantityCompare
+ins r0 Equals 8 8
+ins r0 r4 16 16
+put sorter 2 r0
+sub r3 r3 r4
+j reagent
+
+waitDelivery:
+get r1 controlIC 450
+beqz r1 reset
+bne r1 currentRequestId reset # order changed, abort
+get r0 sorter 1 # limit execution OP
+beqz r0 ra # not set
+beq r0 SorterInstruction.LimitNextExecutionByCount ra
+yield
+j waitDelivery

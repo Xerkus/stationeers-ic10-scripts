@@ -1,0 +1,68 @@
+l r0 db NameHash
+s db Setting 0
+breq r0 HASH("FA Supply IC") 5
+s db Setting -1
+s db On 0
+yield
+jr -3
+
+reagentMap:
+clr db
+move sp 0
+move r0 HASH("Carbon")
+move r1 HASH("ItemCharcoal")
+move r2 0
+jal addOne
+move r0 HASH("Steel")
+move r1 0
+move r2 HASH("ItemSteelIngot")
+jal addOne
+move r0 HASH("Cobalt")
+move r1 HASH("ItemCobaltOre")
+move r2 0
+jal addOne
+move r0 HASH("Silver")
+move r1 HASH("ItemSilverOre")
+move r2 HASH("ItemSilverIngot")
+jal addOne
+move r0 HASH("Nickel")
+move r1 HASH("ItemNickelOre")
+move r2 HASH("ItemNickelIngot")
+jal addOne
+move r0 HASH("Lead")
+move r1 HASH("ItemLeadOre")
+move r2 HASH("ItemLeadIngot")
+jal addOne
+move r0 HASH("Hydrocarbon")
+move r1 HASH("ItemCoalOre")
+move r2 HASH("ItemSolidFuel")
+jal addOne
+move r0 HASH("Gold")
+move r1 HASH("ItemGoldOre")
+move r2 HASH("ItemGoldIngot")
+jal addOne
+move r0 HASH("Silicon")
+move r1 HASH("ItemSiliconOre")
+move r2 HASH("ItemSiliconIngot")
+jal addOne
+move r0 HASH("Copper")
+move r1 HASH("ItemCopperOre")
+move r2 HASH("ItemCopperIngot")
+jal addOne
+move r0 HASH("Iron")
+move r1 HASH("ItemIronOre")
+move r2 HASH("ItemIronIngot")
+jal addOne
+put db 500 sp
+j end
+
+addOne:
+add r3 sp 100
+put db r3 r1
+add r3 sp 200
+put db r3 r2
+push r0
+j ra
+
+end:
+s db On 0
