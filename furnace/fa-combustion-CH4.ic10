@@ -7,13 +7,13 @@
 define Furnace 545937711
 define Pump -321403609
 define Analyzer 435685051
-alias mode r15
-alias minTemp r14
-alias maxTemp r13
-alias minPress r12
-alias maxPress r11
-alias temp r10
-alias press r9
+alias minTemp r15
+alias maxTemp r14
+alias minPress r13
+alias maxPress r12
+alias temp r11
+alias press r10
+alias mode r9
 
 # reset stack after chip (re-)inserted
 clr db
@@ -29,43 +29,47 @@ move sp 4
 pop maxPress
 ext minPress maxPress 0 24
 ext maxPress maxPress 24 24
-min maxPress maxPress 55000
-brge minPress 49000 2
-min maxPress maxPress 50000
+# pressure limit must be higher for Waspaloy
+# Apply to overpressure protection to avoid excessive dumping between waspaloy batches
+sle r0 minPress 40000
+select r0 r0 45000 55000
+min maxPress maxPress r0
 pop maxTemp
 ext minTemp maxTemp 0 24
 ext maxTemp maxTemp 24 24
 pop mode
-lbn r0 1220484876 HASH("FA Purge") Open 2
-select mode r0 2 mode
+# purge lever ignores mode
+lbn r1 1220484876 HASH("FA Purge") Open 2
+select mode r1 2 mode
+# overpressure protection forces purge mode
+lbn r1 Furnace HASH("FA Furnace") Pressure 2
+sgt r1 r1 r0
+select mode r1 2 mode
 
-# operate mixer
-sbn 2104106366 HASH("FA Fuel Mixer") On 0
-# Check pressure in the fuel pipe
+# Operate CH4 + O2 mixer
 lbn r0 Analyzer HASH("FA FuelMix PA") Pressure 2
-brgt r0 6000 9
+slt r0 r0 6000
+breqz r0 8
 # operate mixer
-lbn r12 Analyzer HASH("FA Oxidizer PA") Temperature 2
-lbn r13 Analyzer HASH("FA Fuel PA") Temperature 2
-mul r14 r13 2
-div r14 r12 r14
-add r14 r14 1
-div r14 100 r14
-sbn 2104106366 HASH("FA Fuel Mixer") Setting r14
-sbn 2104106366 HASH("FA Fuel Mixer") On 1
+lbn r1 Analyzer HASH("FA Oxidizer PA") Temperature 2
+lbn r2 Analyzer HASH("FA Fuel PA") Temperature 2
+mul r3 r2 2
+div r3 r1 r3
+add r3 r3 1
+div r3 100 r3
+sbn 2104106366 HASH("FA Fuel Mixer") Setting r3
+sbn 2104106366 HASH("FA Fuel Mixer") On r0
 
+beq mode 1 active
+# idle mode
 sbn Pump HASH("FA FuelMix Pump") On 0
 sbn Pump HASH("FA Hot Pump") On 0
 sbn Pump HASH("FA Coolant Pump") On 0
-
-beq mode 1 active
-beq mode 2 purge
-
-# idle overpressure safety. TODO: after active optimization might need to be invoked
-# TODO: allow manual output operation during idle only closing after overpressure protection trigger
-lbn r0 Furnace HASH("FA Furnace") Pressure 2
-sgt r0 r0 50000
-mul r0 r0 100
+# purge mode is idle mode but with output enabled
+move r0 0
+brne mode 2 3
+move r0 100
+sbn Furnace HASH("FA Furnace") On 1
 sbn Furnace HASH("FA Furnace") SettingOutput r0
 j start
 
@@ -76,12 +80,8 @@ lbn press Furnace HASH("FA Furnace") Pressure 2
 brgt temp 600 2
 sbn Furnace HASH("FA Furnace") Activate 1
 sbn Furnace HASH("FA Furnace") SettingInput 100
-sbn Furnace HASH("FA Furnace") SettingOutput 0
 
 # fuel
-brlt temp minTemp 3
-brlt press minPress 2
-jr 14
 # r0 = Tmax/Tcur * Vfuel * Pmin * 500/(Tfuel * Nfuel * 8314.46)
 select r0 temp temp 300
 div r0 maxTemp r0
@@ -95,7 +95,10 @@ mul r2 r2 r3
 mul r2 r2 8314.46
 div r0 r0 r2
 sbn Pump HASH("FA FuelMix Pump") Setting r0
-sbn Pump HASH("FA FuelMix Pump") On 1
+slt r0 temp minTemp
+slt r1 press minPress
+or r0 r0 r1
+sbn Pump HASH("FA FuelMix Pump") On r0
 
 # coolant
 brlt temp maxTemp 14
@@ -115,10 +118,7 @@ sbn Pump HASH("FA Coolant Pump") Setting r0
 sbn Pump HASH("FA Coolant Pump") On 1
 
 # Pfurn > maxpress = 30
-brlt press maxPress 2
-sbn Furnace HASH("FA Furnace") SettingOutput 30
-j start
-
-purge:
-sbn Furnace HASH("FA Furnace") SettingOutput 50
+sge r0 press maxPress
+mul r0 r0 30
+sbn Furnace HASH("FA Furnace") SettingOutput r0
 j start
