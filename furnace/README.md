@@ -9,7 +9,7 @@ This setup originates from and heavily borrows from Barsiel's furnace control sc
 Controls atmosphere in the combustion chamber of the advanced furnace. This script is specialized for a specific fuel
 and should ideally be swapped for a different version tailored to a different fuel.
 
-In any operating mode script actively prevents overpressure. As long as it runs it will force enable output at >45-55MPa
+In any operating mode script actively prevents overpressure. As long as it runs it will force enable output at 40MPa or 55MPa depending on the last loaded minimum pressure. This is to avoid wasting fuel between batches of waspaloy.
 
 TODO: investigate if methane and hydrogen differ significantly to warrant separate scripts with different pre-calculated
 shortcuts.
@@ -132,9 +132,7 @@ room before sealing it. Once vacuum was achieved the extra vent can be removed a
 buffer. Don't forget to use check-setup script to configure hotbox vents afterwards.
 
 For reference, 100mol in a single 10L pipe segment at 273K will be at 22.7 MPa. 20 water ice has exactly 100 mol of
-nitrogen. 
-
-1x3 inline tank with 100 mol will reach 50MPa limit at 21000K which is possible with superfuel. You've been warned.
+nitrogen.
 
 ## Control and UI
 
