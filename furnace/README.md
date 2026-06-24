@@ -9,8 +9,15 @@ This setup originates from and heavily borrows from Barsiel's furnace control sc
 Controls atmosphere in the combustion chamber of the advanced furnace. This script is specialized for a specific fuel
 and should ideally be swapped for a different version tailored to a different fuel.
 
+In any operating mode script actively prevents overpressure. As long as it runs it will force enable output at >45-55MPa
+
 TODO: investigate if methane and hydrogen differ significantly to warrant separate scripts with different pre-calculated
 shortcuts.
+
+Pumps must feed into a short pipe leading into the furnace gas input. Coolant is expected to be at most 500K while Hot
+is expected to be at least 1000K.
+
+As of now hot input is not implemented.
 
 ### Inputs
 
@@ -25,29 +32,24 @@ Script runs in compact housing named `FA Combustion IC` and takes following stac
   - 24-47 maximum temperature in K
 - Index 3 packed target pressure range:
   - 0-23 minimum pressure in K
-  - 24-47 maximum pressure in K. Maximum pressure is capped at 50 MPA normally but it is increased to 55MPa when minimum
-    pressure is at or above 49MPa to accomodate the super alloys.
+  - 24-47 maximum pressure in K. Maximum pressure is capped at 45 MPA normally but it is increased to 55MPa when minimum
+    pressure is at or above 40MPa to accomodate the super alloys.
 
-In any operating mode script actively prevents overpressure. As long as it runs it will force enable output at >50MPa
-
-TBD: When furnace is in maintain mode and internal atmopshere is within the set conditions `Setting` on the housing is set to 1.
+Lever `FA Purge` overrides mode set by the stack as long as it is pulled. Once it is closed furnace returns to the
+defined operating mode.
 
 ### Used devices
 
 This script uses devices:
+- Optional lever `FA Purge`
 - Volume pump `FA FuelMix Pump`
 - Pipe analizer `FA FuelMix PA`
 - Volume pump `FA Coolant Pump`
 - Pipe analyzer `FA Coolant PA`
-- Volume pump `FA Hot pump`
+- Volume pump `FA Hot Pump`
 - Pipe analyzer `FA Hot PA`
 
-Pumps must feed into short pipe leading into furnace input slot. Coolant is expected to be at most 500K while Hot is
-expected to be at least 1000K.
-
-As of now hot input is not implemented.
-
-Potentially this script will also control fuel mixer, in which case it would need following devices:
+Fuel mixer:
 - Gas mixer `FA Fuel Mixer` with side input opposite power connection used for oxidizer.
 - Pipe analizer `FA Fuel PA` for burnable part of the fuel like H2, CH4 or alcohol.
 - Pipe analizer `FA Oxidizer PA` for oxidizer part of the fuel N2O, O2, O3.
@@ -63,6 +65,16 @@ reagents is handled by a separate script.
 Split control allows for a better UIX having combustion control moved out and its respective responsiveness demands
 reduced. In turn freed capacity is used for a job queue for up to 10 smelt jobs. Queue is on housing stack and can be set
 externally as well as via regular furnace controls.
+
+### Used devices
+
+This script uses devices:
+- Volume pump `FA FuelMix Pump`
+- Pipe analizer `FA FuelMix PA`
+- Volume pump `FA Coolant Pump`
+- Pipe analyzer `FA Coolant PA`
+- Volume pump `FA Hot Pump`
+- Pipe analyzer `FA Hot PA`
 
 ### Recipe stack
 
@@ -99,25 +111,30 @@ produce a full batch even if request is less than that.
 
 ## Furnace hotbox
 
-Furnace loses heat to the environment. More so to the surrounding atmosphere but also to vacuum via radiative heat exhcange.
-Previously trick was to put furnace inside a welded frame but it no longer prevents radiative cooling.
-Current heat preservation method is instead a hotbox: a 1x1x1 room enclosed in walls or frames with sufficient atmosphere
-to prevent radiative interactions and stop loss of heat once it reached equilibrium with the furnace.
+Furnace loses heat to the environment. More so to the surrounding atmosphere but also to the vacuum via radiative heat
+exhcange. Current heat preservation method is to put furnace inside a 1x1x1 hotbox room enclosed in walls or frames with
+sufficient atmosphere to prevent radiative interactions and stop loss of heat once it reached equilibrium with the
+furnace.
 
-Gas in hotbox will heat and expand. To prevent overpressure from popping walls couple active vents named 
-`FA Hotbox Vent 1` and `FA Hotbox Vent 2` inside the hotbox are automatically configured by Control IC to maintain pressure
-between150kPa and 180kPa. They should be connected to a pipe with inline buffer, 1x2 should be sufficient, to store
-excess gaswhile furnace is at its hottest.
+Gas in hotbox will heat and expand. To prevent overpressure from popping walls couple active vents named `FA Hotbox Vent
+1` and `FA Hotbox Vent 2` inside the hotbox are automatically configured by check-setup script to maintain pressure
+between 150kPa and 180kPa. They should be connected to a buffer pipe with inline buffer to store the excess gas while
+furnace is at its hottest. With 71-100 mol of gas 1x2 should be plenty under regular conditions.
 
-Some reddit post suggests 70.45 mols of gas is required. If you feel particularly daring H2 can be used as the
-atmosphere but generally inert gas that is safe within operating conditions is much preferred. Safest bet is
-nitrogen followed by carbon dioxide.
+Initial atmopshere setup is up to you.  
+Some reddit post suggests 70.45 mols of gas per 1x1x1 cube is the threshold to fully stop radiative heat loss. If you
+feel particularly daring H2 can be used as the atmosphere but generally inert gas that is safe within operating
+conditions is much preferred. Mistakes happen. It is best not to cause secondary explosions if hotbox is accidentally
+breached. Safest bet is nitrogen followed by carbon dioxide.
 
-Initial atmopshere setup is up to you. Use IC to temporarily configure one of the vents to vacuum the room. Make sure to
-vacuum the buffer pipe. Once that is done fill the buffer with 71 mol of chosen gas then re-seat and turn on the
-Control IC so it can re-configure hotbox vents.
+My go-to setup method is to add temporary active vent to vacuum the buffer and set one of the hotbox vents to vacuum the
+room before sealing it. Once vacuum was achieved the extra vent can be removed and 71-100 mol of gas introduced into the
+buffer. Don't forget to use check-setup script to configure hotbox vents afterwards.
 
-For reference, 1x2 inline buffer will have 71mol at ~650kPa for the gas at 0C coming from an ice crusher.
+For reference, 100mol in a single 10L pipe segment at 273K will be at 22.7 MPa. 20 water ice has exactly 100 mol of
+nitrogen. 
+
+1x3 inline tank with 100 mol will reach 50MPa limit at 21000K which is possible with superfuel. You've been warned.
 
 ## Control and UI
 

@@ -47,10 +47,12 @@ s r0 On 0
 lbn r0 pump HASH("FA Hot Pump") ReferenceId 2
 beqzal r0 problem
 s r0 On 0
-sbn vent HASH("FA Waste Safety Vent") Mode 0
-sbn vent HASH("FA Waste Safety Vent") PressureInternal 50000
-sbn vent HASH("FA Waste Safety Vent") PressureExternal 50000
-sbn vent HASH("FA Waste Safety Vent") On 1
+lbn r0 vent HASH("FA Waste Safety Vent") ReferenceId 2
+beqzal r0 problem
+s r0 Mode 0
+s r0 PressureInternal 50000
+s r0 PressureExternal 50000
+s r0 On 1
 lbn r0 vent HASH("FA Hotbox Vent 1") ReferenceId 2
 beqzal r0 problem
 s r0 Mode 1
@@ -95,9 +97,11 @@ beqzal r0 problem
 
 j end
 problem:
-s db Setting ra
+sub r15 ra 2
+s db Setting r15
 s db On 0
 yield
 j ra
 end:
 s db Setting 0
+s db On 0
