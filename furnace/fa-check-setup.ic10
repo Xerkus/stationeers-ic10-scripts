@@ -14,8 +14,8 @@ l r0 db PrefabHash
 bneal r0 housing problem
 l r0 db NameHash
 bneal r0 HASH("FA Control IC") problem
-combustion:
-lbn r0 housing HASH("FA Combustion IC") ReferenceId 2
+burner:
+lbn r0 housing HASH("FA Burner IC") ReferenceId 2
 beqzal r0 problem
 s r0 On 0
 lbn r0 HASH("StructureAdvancedFurnace") HASH("FA Furnace") ReferenceId 2

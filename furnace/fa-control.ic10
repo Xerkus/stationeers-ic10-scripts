@@ -7,13 +7,13 @@
 define furnace 545937711
 define dial 554524804
 define led -815193061
-alias combustionIC r15
+alias burnerIC r15
 alias currentTarget r14
 alias currentHash r13
 alias expectReagents r12
 alias jobCounter r11
 
-lbn combustionIC 2037291645 HASH("FA Combustion IC") ReferenceId 2
+lbn burnerIC 2037291645 HASH("FA Burner IC") ReferenceId 2
 sbn led HASH("FA Mode") Mode 10
 sbn dial HASH("FA Ingot Amount") Mode 20
 
@@ -24,16 +24,16 @@ lbn r1 1220484876 HASH("FA Manual") Open 2
 breqz r1 10
 add sp r0 4
 pop r1
-put combustionIC 3 r1
+put burnerIC 3 r1
 pop r1
-put combustionIC 2 r1
-put combustionIC 1 1
+put burnerIC 2 r1
+put burnerIC 1 1
 sbn led HASH("FA Mode") Color 11 # Porple
 sbn led HASH("FA Mode") Setting STR("Manual")
 j start
 # <-- manual mode
-# combustion control state idle
-put combustionIC 1 0
+# burner control state idle
+put burnerIC 1 0
 s db Setting 0
 sbn led HASH("FA Mode") Color 0 # blue
 sbn led HASH("FA Mode") Setting STR("Stdby")
@@ -62,10 +62,10 @@ brle r3 0 -5
 add sp currentTarget 4
 pop r2
 # pressure params
-put combustionIC 3 r2
+put burnerIC 3 r2
 pop r2
 # temperature params
-put combustionIC 2 r2
+put burnerIC 2 r2
 pop r2
 sub r3 r3 r2
 brle r3 0 4
@@ -95,8 +95,8 @@ add r0 r0 1
 brlt r0 10 -7
 # job counter for the supply script to distinguish separate batches
 put db 450 jobCounter
-# set combustion to reach and maintain mode
-put combustionIC 1 1
+# set burner to reach and maintain mode
+put burnerIC 1 1
 sbn led HASH("FA Mode") Color 2 # green
 sbn led HASH("FA Mode") Setting STR("Active")
 jal yieldControls
@@ -106,7 +106,7 @@ lbn r0 furnace HASH("FA Furnace") RecipeHash 2
 brne r0 currentHash -4
 lbn r0 furnace HASH("FA Furnace") Reagents 2
 brlt r0 expectReagents -6
-put combustionIC 1 0
+put burnerIC 1 0
 sbn furnace HASH("FA Furnace") Open 1
 jal yieldControls
 lbn r0 furnace HASH("FA Furnace") Reagents 2

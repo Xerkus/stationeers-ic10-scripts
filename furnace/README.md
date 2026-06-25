@@ -4,7 +4,7 @@
 
 This setup originates from and heavily borrows from Barsiel's furnace control scripts that are community go-to scripts for years.
 
-## Combustion IC
+## Burner IC
 
 Controls atmosphere in the combustion chamber of the advanced furnace. This script is specialized for a specific fuel
 and should ideally be swapped for a different version tailored to a different fuel.
@@ -21,7 +21,7 @@ As of now hot input is not implemented.
 
 ### Inputs
 
-Script runs in compact housing named `FA Combustion IC` and takes following stack configuration:
+Script runs in compact housing named `FA Burner IC` and takes following stack configuration:
 
 - Index 1: mode.
   - Value 0 is idle.
@@ -59,7 +59,7 @@ Fuel mixer:
 Script runs in a compact housing named `FA Control IC`. It handles user facing controls such as recipe selection dials
 and managing current job and job queue.
 
-It is responsible for setting appropriate `FA Combustion IC` stack parameters and ejection of the results. Supply of
+It is responsible for setting appropriate `FA Burner IC` stack parameters and ejection of the results. Supply of
 reagents is handled by a separate script. 
 
 Split control allows for a better UIX having combustion control moved out and its respective responsiveness demands

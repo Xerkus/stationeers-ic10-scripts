@@ -31,8 +31,8 @@ ext minPress maxPress 0 24
 ext maxPress maxPress 24 24
 # pressure limit must be higher for Waspaloy
 # Apply to overpressure protection to avoid excessive dumping between waspaloy batches
-sle r0 minPress 40000
-select r0 r0 45000 55000
+sle r0 minPress 35000
+select r0 r0 40000 55000
 min maxPress maxPress r0
 pop maxTemp
 ext minTemp maxTemp 0 24
